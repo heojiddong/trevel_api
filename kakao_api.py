@@ -24,4 +24,3 @@ def address_to_coords(address):
     if docs:
         return docs[0]["x"], docs[0]["y"]
     return None, None
-print("🔑 현재 사용 중인 KAKAO_API_KEY:", KAKAO_API_KEY)
