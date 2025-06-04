@@ -1,4 +1,5 @@
 import os
+import streamlit as st
 
 st.write("카카오 키 확인:", os.getenv("KAKAO_API_KEY"))
 
