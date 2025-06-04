@@ -1,6 +1,7 @@
 import requests
 import os
 from dotenv import load_dotenv
+import streamlit as st
 
 load_dotenv()
 KAKAO_API_KEY = os.getenv("KAKAO_API_KEY")
@@ -19,6 +20,9 @@ def address_to_coords(address):
     url = "https://dapi.kakao.com/v2/local/search/address.json"
     params = {"query": address}
     res = requests.get(url, headers=headers, params=params)
+    st.write("📡 응답 상태코드:", res.status_code)
+    st.write("📦 응답 내용:", res.json())
+
     docs = res.json().get("documents", [])
     if docs:
         return docs[0]["x"], docs[0]["y"]
