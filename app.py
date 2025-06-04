@@ -1,28 +1,14 @@
-import os
 import streamlit as st
-from kakao_api import address_to_coords, search_kakao_places
-from naver_api import search_naver_blog
 
-st.title("🌴 여행지 기반 맛집 추천")
+st.set_page_config(page_title="여행 추천 서비스", page_icon="✈️")
 
-place = st.text_input("여행지를 입력하세요 (예: 부산 해운대)")
-keyword = st.text_input("찾고 싶은 것 (예: 바다 카페, 한식 맛집)")
+st.title("🌍 여행지 추천 서비스")
+st.markdown("여행지를 입력하면 추천 정보를 안내해드려요!")
 
-if st.button("검색하기") and place and keyword:
-    x, y = address_to_coords(place)
-    if x and y:
-        results = search_kakao_places(keyword, x=x, y=y)
-        if not results:
-            st.warning("검색 결과가 없습니다.")
-        for r in results[:5]:  # 상위 5개 장소
-            st.subheader(r["place_name"])
-            st.write(f"📍 주소: {r['road_address_name']}")
-            st.write(f"🔗 지도 보기: [카카오맵 링크]({r['place_url']})")
-            blogs = search_naver_blog(r["place_name"])
-            if blogs:
-                st.write("📝 블로그 후기:")
-                for b in blogs:
-                    st.markdown(f"- [{b['title']}]({b['link']})")
-            st.markdown("---")
-    else:
-        st.error("주소를 좌표로 변환하지 못했습니다.")
+location = st.text_input("여행지를 입력하세요", placeholder="예: 부산, 제주도")
+
+if location:
+    st.session_state["location"] = location
+    st.success(f"여행지 **{location}**가 저장되었습니다!")
+else:
+    st.info("좌측 메뉴에서 추천 항목을 확인하려면 여행지를 먼저 입력하세요.")
