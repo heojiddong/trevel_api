@@ -5,7 +5,7 @@ import streamlit as st
 from kakao_api import address_to_coords, search_kakao_places
 from naver_api import search_naver_blog
 
-st.title("🌴 여행지 기반 맛집 & 즐길거리 추천")
+st.title("🌴 여행지 기반 맛집 추천")
 
 place = st.text_input("여행지를 입력하세요 (예: 부산 해운대)")
 keyword = st.text_input("찾고 싶은 것 (예: 바다 카페, 한식 맛집)")
