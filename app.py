@@ -1,7 +1,5 @@
 import os
 import streamlit as st
-
-import streamlit as st
 from kakao_api import address_to_coords, search_kakao_places
 from naver_api import search_naver_blog
 
