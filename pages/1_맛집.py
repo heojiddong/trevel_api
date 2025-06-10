@@ -11,12 +11,12 @@ if not location:
     st.info("📝 메인 페이지에서 '부산', '제주도' 등 여행지를 입력한 뒤 이 페이지를 다시 열어보세요.")
     st.stop()
 
-# Kakao API 함수 (size=45로 최대 결과 요청)
+# Kakao API 함수
 def search_places(query):
     headers = {
         "Authorization": f"KakaoAK {st.secrets['KAKAO_API_KEY']}"
     }
-    params = {"query": query, "size": 45}
+    params = {"query": query, "size": 10}
     res = requests.get("https://dapi.kakao.com/v2/local/search/keyword.json", headers=headers, params=params)
     return res.json().get("documents", [])
 
@@ -81,12 +81,12 @@ def get_food_and_features(query):
 query = f"{location} 맛집"
 all_results = search_places(query)
 
-# 후기 키워드 조건 완화: 음식 or 특징이 하나라도 있으면 추천
+# '맛집' 키워드가 블로그에 언급된 장소만 필터링
 filtered_results = []
 for place in all_results:
     name = place["place_name"]
     food, features, links = get_food_and_features(f"{location} {name}")
-    if (food or features) and links:
+    if features and "맛집" in features:
         clean_features = [f for f in features if f != "맛집"]
         filtered_results.append((place, food, clean_features, links))
 
@@ -109,8 +109,8 @@ if filtered_results:
         if links:
             st.write("📰 관련 블로그 후기:")
             for title, url in links:
-                clean_title = re.sub(r"[^\w\s가-힣]", "", title).strip() or "블로그 글 보기"
+                clean_title = title.strip() or "블로그 글 보기"
                 st.markdown(f"- [{clean_title}]({url})")
         st.markdown("---")
 else:
-    st.info("추천할 만한 맛집을 찾을 수 없습니다. 여행지를 바꿔보거나 다시 시도해 보세요.")
+    st.info("‘맛집’ 키워드가 포함된 블로그 후기를 찾을 수 있는 장소가 없습니다.")
