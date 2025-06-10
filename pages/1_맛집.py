@@ -7,7 +7,8 @@ st.title("🍜 여행지 맛집 추천")
 # 여행지 확인
 location = st.session_state.get("location")
 if not location:
-    st.warning("여행지를 먼저 입력해 주세요 (메인 페이지에서)")
+    st.warning("❗ 먼저 메인 화면에서 여행지를 입력해 주세요.")
+    st.info("📝 메인 페이지에서 '부산', '제주도' 등 여행지를 입력한 뒤 이 페이지를 다시 열어보세요.")
     st.stop()
 
 # Kakao API 함수
@@ -19,7 +20,7 @@ def search_places(query):
     res = requests.get("https://dapi.kakao.com/v2/local/search/keyword.json", headers=headers, params=params)
     return res.json().get("documents", [])
 
-# 특징 키워드 → 자연어 문장 매핑
+# 특징 키워드 → 자연어 문장 매핑 (※ '맛집' 제외됨)
 feature_descriptions = {
     "가성비": "가성비가 좋다는 평이 많습니다.",
     "뷰": "전망이 좋은 곳으로 알려져 있습니다.",
@@ -73,20 +74,17 @@ def get_food_and_features(query):
 
     return found_foods, found_features
 
-# 장소 검색 실행
+# Kakao 장소 검색
 query = f"{location} 맛집"
 all_results = search_places(query)
 
-# '맛집' 키워드가 블로그에서 언급된 장소만 필터링
+# '맛집' 키워드가 블로그에 언급된 장소만 필터링
 filtered_results = []
 for place in all_results:
     name = place["place_name"]
-    address = place["road_address_name"] or place["address_name"]
-    map_url = place["place_url"]
-
     food, features = get_food_and_features(f"{location} {name}")
     if features and "맛집" in features:
-        # '맛집' 키워드는 출력용에서 제외
+        # '맛집' 키워드는 출력에서 제외
         clean_features = [f for f in features if f != "맛집"]
         filtered_results.append((place, food, clean_features))
 
