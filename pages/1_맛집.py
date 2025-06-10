@@ -19,7 +19,7 @@ def search_places(query):
     res = requests.get("https://dapi.kakao.com/v2/local/search/keyword.json", headers=headers, params=params)
     return res.json().get("documents", [])
 
-# 네이버 블로그 검색 함수 + 키워드 요약
+# 네이버 블로그 검색 함수 + 키워드 요약 (복수 문서 + title 포함)
 def get_food_and_features(query):
     headers = {
         "X-Naver-Client-Id": st.secrets["NAVER_CLIENT_ID"],
@@ -27,7 +27,7 @@ def get_food_and_features(query):
     }
     params = {
         "query": query,
-        "display": 1,
+        "display": 3,
         "sort": "sim"
     }
     res = requests.get("https://openapi.naver.com/v1/search/blog.json", headers=headers, params=params)
@@ -35,15 +35,24 @@ def get_food_and_features(query):
     if not items:
         return None, None
 
-    desc = items[0]["description"]
-    clean = re.sub(r"<.*?>", "", desc)
+    combined_text = ""
+    for item in items:
+        title = re.sub(r"<.*?>", "", item.get("title", ""))
+        desc = re.sub(r"<.*?>", "", item.get("description", ""))
+        combined_text += f"{title} {desc} "
 
-    # 음식 키워드 후보 (원하면 추가 가능)
-    food_keywords = ["돈가스", "초밥", "라면", "회", "국밥", "떡볶이", "마라탕", "스시", "우동", "족발", "냉면", "해산물", "파스타", "스테이크", "한식", "양식", "중식", "분식", "뷔페", "정식"]
-    feature_keywords = ["가성비", "뷰", "친절", "인테리어", "혼밥", "데이트", "줄", "대기", "예약", "깔끔", "조용", "감성", "푸짐", "분위기", "웨이팅"]
+    # 음식 키워드 후보 (원하면 자유롭게 추가 가능)
+    food_keywords = [
+        "돈가스", "초밥", "라면", "회", "국밥", "떡볶이", "마라탕", "스시", "우동", "족발",
+        "냉면", "해산물", "파스타", "스테이크", "한식", "양식", "중식", "분식", "뷔페", "정식"
+    ]
+    feature_keywords = [
+        "가성비", "뷰", "친절", "인테리어", "혼밥", "데이트", "줄", "대기", "예약",
+        "깔끔", "조용", "감성", "푸짐", "분위기", "웨이팅", "서비스", "맛집", "청결"
+    ]
 
-    found_foods = [k for k in food_keywords if k in clean]
-    found_features = [k for k in feature_keywords if k in clean]
+    found_foods = sorted(set([k for k in food_keywords if k in combined_text]))
+    found_features = sorted(set([k for k in feature_keywords if k in combined_text]))
 
     return found_foods, found_features
 
@@ -62,7 +71,7 @@ if results:
         st.write(f"📌 주소: {address}")
         st.markdown(f"🔗 [카카오맵 보기]({map_url})")
 
-        # 네이버 블로그에서 요약 키워드 추출
+        # 블로그 분석 (title + desc 기반 다중 문서)
         food, feature = get_food_and_features(f"{location} {name}")
         if food:
             st.write("🍽️ 대표 음식:", ", ".join(food))
