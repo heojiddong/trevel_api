@@ -11,12 +11,12 @@ if not location:
     st.info("📝 메인 페이지에서 '부산', '제주도' 등 여행지를 입력한 뒤 이 페이지를 다시 열어보세요.")
     st.stop()
 
-# Kakao API 함수 (size=45로 최대 결과 요청)
+# Kakao API 함수
 def search_places(query):
     headers = {
         "Authorization": f"KakaoAK {st.secrets['KAKAO_API_KEY']}"
     }
-    params = {"query": query, "size": 45}
+    params = {"query": query, "size": 10}
     res = requests.get("https://dapi.kakao.com/v2/local/search/keyword.json", headers=headers, params=params)
     return res.json().get("documents", [])
 
@@ -41,7 +41,7 @@ feature_descriptions = {
     "청결": "매장이 청결하게 유지되고 있습니다."
 }
 
-# 네이버 블로그 검색 + 키워드 추출 + 링크 반환
+# 블로그 검색 및 키워드/링크 추출
 def get_food_and_features(query):
     headers = {
         "X-Naver-Client-Id": st.secrets["NAVER_CLIENT_ID"],
@@ -77,11 +77,11 @@ def get_food_and_features(query):
 
     return found_foods, found_features, links
 
-# 장소 검색 실행 (최대 45개)
+# Kakao 장소 검색
 query = f"{location} 맛집"
 all_results = search_places(query)
 
-# 블로그 후기에서 '맛집' 키워드가 있는 장소만 필터링
+# '맛집' 키워드가 블로그에 언급된 장소만 필터링
 filtered_results = []
 for place in all_results:
     name = place["place_name"]
@@ -109,7 +109,7 @@ if filtered_results:
         if links:
             st.write("📰 관련 블로그 후기:")
             for title, url in links:
-                clean_title = re.sub(r"[^\w\s가-힣]", "", title).strip() or "블로그 글 보기"
+                clean_title = title.strip() or "블로그 글 보기"
                 st.markdown(f"- [{clean_title}]({url})")
         st.markdown("---")
 else:
