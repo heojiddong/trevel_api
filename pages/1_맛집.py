@@ -16,7 +16,7 @@ def search_places(query):
     headers = {
         "Authorization": f"KakaoAK {st.secrets['KAKAO_API_KEY']}"
     }
-    params = {"query": query, "size": 10}
+    params = {"query": query, "size": 45}
     res = requests.get("https://dapi.kakao.com/v2/local/search/keyword.json", headers=headers, params=params)
     return res.json().get("documents", [])
 
