@@ -11,7 +11,7 @@ if not location:
     st.info("📝 메인 페이지에서 '부산', '제주도' 등 여행지를 입력한 뒤 이 페이지를 다시 열어보세요.")
     st.stop()
 
-# Kakao API 함수
+# Kakao API 함수 (size=10)
 def search_places(query):
     headers = {
         "Authorization": f"KakaoAK {st.secrets['KAKAO_API_KEY']}"
@@ -20,7 +20,7 @@ def search_places(query):
     res = requests.get("https://dapi.kakao.com/v2/local/search/keyword.json", headers=headers, params=params)
     return res.json().get("documents", [])
 
-# 특징 키워드 → 자연어 문장 매핑 (※ '맛집' 제외)
+# 특징 키워드 → 자연어 문장 매핑
 feature_descriptions = {
     "가성비": "가성비가 좋다는 평이 많습니다.",
     "뷰": "전망이 좋은 곳으로 알려져 있습니다.",
@@ -42,14 +42,14 @@ feature_descriptions = {
 }
 
 # 블로그 검색 및 키워드/링크 추출
-def get_food_and_features(query):
+def get_food_and_features(query, place_name):
     headers = {
         "X-Naver-Client-Id": st.secrets["NAVER_CLIENT_ID"],
         "X-Naver-Client-Secret": st.secrets["NAVER_CLIENT_SECRET"]
     }
     params = {
         "query": query,
-        "display": 3,
+        "display": 5,
         "sort": "sim"
     }
     res = requests.get("https://openapi.naver.com/v1/search/blog.json", headers=headers, params=params)
@@ -63,8 +63,17 @@ def get_food_and_features(query):
         title = re.sub(r"<.*?>", "", item.get("title", ""))
         desc = re.sub(r"<.*?>", "", item.get("description", ""))
         link = item.get("link", "")
+
+        if place_name not in title and place_name not in desc:
+            continue
+
         combined_text += f"{title} {desc} "
-        links.append((title, link))
+        links.append((title.strip(), link))
+        if len(links) >= 3:
+            break
+
+    if not links:
+        return None, None, []
 
     food_keywords = [
         "돈가스", "초밥", "라면", "회", "국밥", "떡볶이", "마라탕", "스시", "우동", "족발",
@@ -77,20 +86,20 @@ def get_food_and_features(query):
 
     return found_foods, found_features, links
 
-# Kakao 장소 검색
+# 장소 검색
 query = f"{location} 맛집"
 all_results = search_places(query)
 
-# '맛집' 키워드가 블로그에 언급된 장소만 필터링
+# 후기 키워드 조건 완화
 filtered_results = []
 for place in all_results:
     name = place["place_name"]
-    food, features, links = get_food_and_features(f"{location} {name}")
-    if features and "맛집" in features:
+    food, features, links = get_food_and_features(f"{location} {name}", name)
+    if (food or features) and links:
         clean_features = [f for f in features if f != "맛집"]
         filtered_results.append((place, food, clean_features, links))
 
-# 결과 출력
+# 출력
 if filtered_results:
     for place, food, features, links in filtered_results:
         name = place["place_name"]
@@ -109,8 +118,8 @@ if filtered_results:
         if links:
             st.write("📰 관련 블로그 후기:")
             for title, url in links:
-                clean_title = title.strip() or "블로그 글 보기"
+                clean_title = title or "블로그 글 보기"
                 st.markdown(f"- [{clean_title}]({url})")
         st.markdown("---")
 else:
-    st.info("‘맛집’ 키워드가 포함된 블로그 후기를 찾을 수 있는 장소가 없습니다.")
+    st.info("추천할 만한 맛집을 찾을 수 없습니다. 여행지를 바꿔보거나 다시 시도해 보세요.")
