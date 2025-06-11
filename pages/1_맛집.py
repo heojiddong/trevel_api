@@ -4,6 +4,11 @@ import re
 
 st.title("🍜 여행지 맛집 추천")
 
+# 🔑 API 키 직접 입력 (보안에 유의하세요)
+KAKAO_API_KEY = "cf0f3e08c8579cf39f37df048fc9802a"
+NAVER_CLIENT_ID = "288mB5F53usWEHGy9ip8"
+NAVER_CLIENT_SECRET = "qV0iKKCgIG"
+
 # 여행지 확인
 location = st.session_state.get("location")
 if not location:
@@ -14,7 +19,7 @@ if not location:
 # Kakao API 함수 (size=10)
 def search_places(query):
     headers = {
-        "Authorization": f"KakaoAK {st.secrets['KAKAO_API_KEY']}"
+        "Authorization": f"KakaoAK {KAKAO_API_KEY}"
     }
     params = {"query": query, "size": 10}
     res = requests.get("https://dapi.kakao.com/v2/local/search/keyword.json", headers=headers, params=params)
@@ -44,8 +49,8 @@ feature_descriptions = {
 # 블로그 검색 및 키워드/링크 추출
 def get_food_and_features(query, place_name):
     headers = {
-        "X-Naver-Client-Id": st.secrets["NAVER_CLIENT_ID"],
-        "X-Naver-Client-Secret": st.secrets["NAVER_CLIENT_SECRET"]
+        "X-Naver-Client-Id": NAVER_CLIENT_ID,
+        "X-Naver-Client-Secret": NAVER_CLIENT_SECRET
     }
     params = {
         "query": query,
@@ -87,39 +92,4 @@ def get_food_and_features(query, place_name):
     return found_foods, found_features, links
 
 # 장소 검색
-query = f"{location} 맛집"
-all_results = search_places(query)
-
-# 후기 키워드 조건 완화
-filtered_results = []
-for place in all_results:
-    name = place["place_name"]
-    food, features, links = get_food_and_features(f"{location} {name}", name)
-    if (food or features) and links:
-        clean_features = [f for f in features if f != "맛집"]
-        filtered_results.append((place, food, clean_features, links))
-
-# 출력
-if filtered_results:
-    for place, food, features, links in filtered_results:
-        name = place["place_name"]
-        address = place["road_address_name"] or place["address_name"]
-        map_url = place["place_url"]
-
-        st.markdown(f"### 📍 {name}")
-        st.write(f"📌 주소: {address}")
-        st.markdown(f"🔗 [카카오맵 보기]({map_url})")
-        if food:
-            st.write("🍽️ 대표 음식:", ", ".join(food))
-        if features:
-            for f in features:
-                if f in feature_descriptions:
-                    st.write("💬", feature_descriptions[f])
-        if links:
-            st.write("📰 관련 블로그 후기:")
-            for title, url in links:
-                clean_title = title or "블로그 글 보기"
-                st.markdown(f"- [{clean_title}]({url})")
-        st.markdown("---")
-else:
-    st.info("추천할 만한 맛집을 찾을 수 없습니다. 여행지를 바꿔보거나 다시 시도해 보세요.")
+query =
